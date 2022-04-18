@@ -145,9 +145,15 @@ def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, 
     track_duration = int(track.duration_seconds) # round down
 
     # Calculate all possible full slices of 'slice_duration' from 0 secs till end
-    slices =[(0, slice_duration*1000)] # add first sample
-    for i in range(slice_duration-overlap,track_duration-overlap,slice_duration-overlap): # add the rest
-        slices.append((i*1000, ((i+slice_duration)*1000)))
+    step_size = slice_duration-overlap
+    
+    # Get starting points first, then add end points
+    starting_points = []
+    for p in range(0, track_duration, step_size):
+        if p+slice_duration <= track_duration:
+            starting_points.append(p*1000)
+
+    slices = [(p,p+slice_duration*1000) for p in starting_points]
 
     # Apply max slice threshold if needed
     if max_slices and len(slices) > max_slices:

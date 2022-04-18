@@ -270,7 +270,10 @@ class Dataset:
 
                 # Store melspectrogram as array
                 np.save(f"{target_path}{cat}/{track[:-4]}_melspec.npy", melspec)
+            print()
 
+    def create_training_dataset_new(self, melspec_path:str, target_path:str, assert_shape:bool, bit:int=16):
+        pass
 
     def create_training_dataset(self, melspec_path, target_path, assert_shape = None, bit = 16):
         """

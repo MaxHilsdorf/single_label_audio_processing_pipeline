@@ -34,10 +34,10 @@ print(D.line)
 print()
 
 SLICED_MP3_FOLDER = "processed_mp3s/"
-SLICE_DURATION = 15 # in seconds
+SLICE_DURATION = 10 # in seconds
 
 # Adjust parameters to your liking
-D.create_mp3_dataset(target_path=D.dataset_folder+SLICED_MP3_FOLDER, slice_duration=SLICE_DURATION, max_slices=5, random_slice_selection=True, overlap=0, normalize_mp3s=True)
+D.create_mp3_dataset(target_path=D.dataset_folder+SLICED_MP3_FOLDER, slice_duration=SLICE_DURATION, max_slices=4, random_slice_selection=True, overlap=2, normalize_mp3s=True)
 
 print(D.line)
 print("MP3s processed")
