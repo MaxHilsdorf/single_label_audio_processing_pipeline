@@ -123,6 +123,8 @@ class Dataset:
         None.
         """
 
+        self.processed_mp3_folder = target_path
+
         # Create all required folders
         if not os.path.exists(target_path):
             os.makedirs(target_path)
@@ -185,7 +187,7 @@ class Dataset:
             print()
 
 
-    def create_melspec_dataset(self, mp3_path, target_path, sr = 22050, hop_length = 1024, n_fft = 2048,
+    def create_melspec_dataset(self, target_path, sr = 22050, hop_length = 1024, n_fft = 2048,
                                n_mels = 60, assert_shape = None, bit = 16):
 
         """
@@ -193,8 +195,6 @@ class Dataset:
 
         Arguments
         ---------
-        <mp3_path>:
-            Specify where the relevant MP3 files are.
         <target_path>:
             Specify a folder to create the new dataset in.
         <sr>
@@ -218,6 +218,8 @@ class Dataset:
         None.
         """
 
+        self.spec_folder = target_path
+
         # Create all required folders
         if not os.path.exists(target_path):
             os.makedirs(target_path)
@@ -232,7 +234,7 @@ class Dataset:
             print()
 
             # Get all audio tracks in the category
-            cat_tracks = os.listdir(mp3_path+cat)
+            cat_tracks = os.listdir(self.processed_mp3_folder+cat)
 
             # Case: entire category is already processed
             # that is the case if the last track or the second to last track in the category
@@ -259,7 +261,7 @@ class Dataset:
 
                 # Get melspectrogram
                 try:
-                    melspec = audio_processor.create_melspectrogram(file_path = mp3_path+cat+"/"+track,
+                    melspec = audio_processor.create_melspectrogram(file_path = self.processed_mp3_folder+cat+"/"+track,
                                                    sr = sr, hop_length = hop_length,
                                                    n_fft = n_fft, n_mels = n_mels,
                                                    assert_shape = assert_shape, bit = bit)
@@ -270,95 +272,35 @@ class Dataset:
 
                 # Store melspectrogram as array
                 np.save(f"{target_path}{cat}/{track[:-4]}_melspec.npy", melspec)
-
-
-    def create_training_dataset(self, melspec_path, target_path, assert_shape = None, bit = 16):
-        """
-        Transforms the structured melspectrogram dataset into two numpy arrays:
-            1. concatenation of all melspectrograms
-            2. array of category labels
-
-        Arguments
-        ---------
-        <melspec_path>:
-            Specify where the relevant melspectrograms are.
-        <target_path>:
-            Specify a folder to create the new dataset in.#
-        <assert_shape>:
-            Melspecs which differ from the given shape are ignored.
-            Default: False
-        Returns
-        -------
-        None.
-        """
-
-        # Write a text file assigning the categories to numbers
-        with open(target_path+"category_labels.txt", "w") as file:
-            for i, cat in enumerate(self.categories):
-                file.write(f"{cat}, {i}\n")
-
-        # Process category by category for shorter running time
-
-        # For every category, consider all tracks
-        for i, cat in enumerate(self.categories):
-
-
-            # If category already processed, skip to next
-            if f"melspecs_{cat}.npy" in os.listdir(target_path):
-                print(f"{cat} fully processed. Skipping.")
-                print()
-                continue
-
-            print(f"Processing {cat}")
-            print()
-
-            # Get all audio tracks in the category
-            cat_tracks = os.listdir(melspec_path+cat)
-
-            # For each track, slice the track and export slices to target_path
-            for j, spec in enumerate(cat_tracks):
-
-                if j% 250 == 0:
-                    print(f"processing {j}/{len(cat_tracks)}")
-
-                # Load melspec
-                try:
-                    ms = np.load(f"{melspec_path}{cat}/{spec}", allow_pickle = True).astype(f"float{bit}")
-                except:
-                    print(f"Could not load {spec}")
-                    continue
-
-                # If no shape assertion is given, derive shape from first melspec
-                if not assert_shape and j == 0:
-                    melspecs = np.empty((1, ms.shape[0], ms.shape[1]), dtype = f"float{bit}")
-                    #labels = np.array([i], dtype = "int16")
-
-                elif assert_shape and j == 0:
-                    melspecs = np.empty((1, assert_shape[0], assert_shape[1]), dtype = f"float{bit}")
-                    #labels = np.array([i], dtype = "int16")
-
-                # Concatenate existing melspecs
-
-                try: # If a melspecs shape is incorrect, skip it
-                    ms = ms.reshape((1,melspecs.shape[1], melspecs.shape[2]))
-                except ValueError:
-                    print(f"{spec} has an incorrect shape.")
-                    continue
-
-                melspecs = np.concatenate([melspecs, ms], axis = 0)
-                #labels = np.append(labels, i)
-
-
-            # Store arrays
-            np.save(target_path+f"melspecs_{cat}.npy", melspecs)
-            #np.save(target_path+f"categories_{cat}.npy", labels_onehot)
-
-            print(f"{cat} processed")
-            print(f"spec shape was: {melspecs.shape}")
             print()
 
 
-    def create_training_dataset_by_val_test_dict(self, melspec_path, target_path, val_test_dict, assert_shape = None, bit=16):
+    def create_train_val_test_dict(self, relative_sizes:tuple=(0.8,.1,.1), seed=10):
+
+        # Check if relative sizes sum up to 1
+        if sum(relative_sizes) != 1:
+            raise(ArithmeticError("Relative sizes must sum up to 1."))
+
+        sample_dict = {cat:{"val":[], "test":[]} for cat in self.categories}
+
+        # Split data category by category
+        for cat in self.categories:
+
+            track_names = [name[:-4] for name in os.listdir(self.raw_mp3_folder+cat+"/")]
+            n_tracks = len(track_names)
+            n_train_tracks = int(relative_sizes[0]*n_tracks)
+            n_val_tracks = int(relative_sizes[1]*n_tracks)
+
+            random.shuffle(track_names)
+            val_tracks = track_names[n_train_tracks:n_train_tracks+n_val_tracks]
+            test_tracks = track_names[n_train_tracks+n_val_tracks:]
+        
+            sample_dict[cat]["val"] = val_tracks
+            sample_dict[cat]["test"] = test_tracks
+
+        return sample_dict
+
+    def create_training_dataset_by_val_test_dict(self, target_path:str, train_val_test_dict, assert_shape = None, bit=16):
         """
         Alternative version of "create_training_dataset". This method creates seperate datasets for
         training, validation, and testing.
@@ -380,6 +322,8 @@ class Dataset:
         -------
         None.
         """
+
+        self.data_folder = target_path
 
         # Write a text file assigning the categories to numbers
         with open(target_path+"category_labels.txt", "w") as file:
