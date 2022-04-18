@@ -26,10 +26,73 @@ class Dataset:
     as well as into a melspectrogram dataset ready for classification tasks.
     """
 
-    def __init__(self, raw_mp3_path):
-        self.raw_mp3_path = raw_mp3_path
-        self.dataset_folder = "/".join(raw_mp3_path.split("/")[:-2])+"/"
-        self.categories = os.listdir(self.raw_mp3_path)
+    def __init__(self, raw_mp3_folder):
+        self.raw_mp3_folder = raw_mp3_folder
+        self.dataset_folder = "/".join(raw_mp3_folder.split("/")[:-2])+"/"
+        self.categories = os.listdir(self.raw_mp3_folder)
+
+        self.line = "-- "*10 # Standard line for print separation
+
+    def get_structure_report(self):
+        """
+        Prints a report describing the dataset structure. Points the user to
+        certain or potential problems. Takes no arguments. Returns True if structure
+        is valid, else returns False.
+        """
+
+        valid = True
+
+        print(self.line)
+        print("DATASET STRUCTURE REPORT")
+        print(self.line)
+        print()
+
+        # Do given folders exist?
+        dataset_folder_exists = os.path.exists(self.dataset_folder)
+        raw_mp3_folder_exists = os.path.exists(self.raw_mp3_folder)
+
+        if not all((dataset_folder_exists, raw_mp3_folder_exists)):
+            valid = False
+            print("Not all given folders exist:")
+            print("Dataset Folder:", dataset_folder_exists)
+            print("Raw MP3 Folder:", raw_mp3_folder_exists)
+
+        else:
+            print("All given folders exist")
+        
+        print(self.line)
+        
+        # Are raw mp3s structured correctly in category folders
+
+        categories = os.listdir(self.raw_mp3_folder)
+        is_folder = [os.path.isdir(self.raw_mp3_folder+cat) for cat in categories]
+        
+        if not all(is_folder):
+            valid = False
+            print("There may be only folders within the raw mp3 folder")
+            for b,cat in zip(is_folder, categories):
+                if not b: print(cat)
+            print("are not folders")
+
+        else:
+            print("Category structure is okay")
+
+        print(self.line)
+        
+        if valid:
+            # Print structure report
+            print(f"The dataset has {len(categories)} classes")
+            print("MP3 Distribution:")
+            for cat in categories:
+                n_mp3s = len(os.listdir(self.raw_mp3_folder+cat+'/'))
+                print(f"{cat}: {n_mp3s} mp3s")
+
+        else:
+            print("Structure is not valid. Please fix reported issues.")
+
+        print(self.line)
+        
+        return valid
 
 
     def create_mp3_dataset(self, target_path: str, slice_duration: int, max_slices: int,
@@ -60,20 +123,26 @@ class Dataset:
         None.
         """
 
+        # Create all required folders
+        if not os.path.exists(target_path):
+            os.makedirs(target_path)
+        for cat in self.categories:
+            if not os.path.exists(target_path+cat+"/"):
+                os.makedirs(target_path+cat+"/")
+
         # For each category, slice all audio tracks
         for cat in self.categories:
 
-            print("-- "*10)
+            print(self.line)
             print(f"Processing {cat}")
             print()
 
             # Get all audio tracks in the category
-            cat_tracks = os.listdir(self.raw_mp3_path+cat)
+            cat_tracks = os.listdir(self.raw_mp3_folder+cat)
 
             # Case: entire category is already processed
             # that is the case if the last track or the second to last track in the category
             #  can be found in the target path
-            print("{}_1.mp3".format(cat_tracks[-1].split(".")[0]))
             if("{}_1.mp3".format(cat_tracks[-1].split(".")[0]) in os.listdir(target_path+cat)
             or "{}_1.mp3".format(cat_tracks[-2].split(".")[0]) in os.listdir(target_path+cat)):
                 print(cat, "fully processed")
@@ -91,15 +160,15 @@ class Dataset:
                 """
                 Subcase: track already fully processed
                 -> continue with next track
-                For efficiency purposes, we assume that a track with at least 4 processed slices is fully processed.
+                For efficiency purposes, we assume that a track with at least 3 processed slices is fully processed.
                 """
-                if f"{track[:-4]}_{4}.mp3" in os.listdir(
+                if f"{track[:-4]}_{3}.mp3" in os.listdir(
                         target_path+cat+"/"):
                     continue
 
                 # Subcase: track not processed yet
                 try:
-                    audio_processor.full_split(file_path = self.raw_mp3_path+cat+"/"+track,
+                    audio_processor.slice_mp3(file_path = self.raw_mp3_folder+cat+"/"+track,
                                                      slice_duration = slice_duration,
                                                      max_slices = max_slices,
                                                      export_folder = target_path+"/"+cat+"/",
@@ -107,7 +176,7 @@ class Dataset:
                                                      normalize = normalize_mp3s,
                                                      random_slice_selection = random_slice_selection,
                                                      overlap = overlap)
-                except audio_processor.LibrosaAudioLoadError:
+                except audio_processor.AudioLoadError:
                     print("Unable to load", track)
                 continue
 
@@ -149,6 +218,13 @@ class Dataset:
         None.
         """
 
+        # Create all required folders
+        if not os.path.exists(target_path):
+            os.makedirs(target_path)
+        for cat in self.categories:
+            if not os.path.exists(target_path+cat+"/"):
+                os.makedirs(target_path+cat+"/")
+
         # For each category, get melspectrograms for each track
         for cat in self.categories:
 
@@ -188,7 +264,7 @@ class Dataset:
                                                    n_fft = n_fft, n_mels = n_mels,
                                                    assert_shape = assert_shape, bit = bit)
 
-                except audio_processor.LibrosaAudioLoadError:
+                except audio_processor.AudioLoadError:
                         print("Unable to load", track)
                         continue
 
@@ -442,7 +518,7 @@ class Dataset:
                 try:
                     signal, sr = librosa.load(self.dataset_folder+reg_mp3_folder+cat+"/"+to_aug,
                                               sr = sr)
-                except audio_processor.LibrosaAudioLoadError:
+                except audio_processor.AudioLoadError:
                     print("Unable to load", to_aug)
                     continue
 

@@ -23,14 +23,14 @@ import random
 #### EXCEPTIONS #####
 #####################
 
-class LibrosaAudioLoadError(Exception):
-    """ Raised when librosa is unable to read an audio file.
+class AudioLoadError(Exception):
+    """ Raised when unable to read an audio file.
     Attributes:
         file_name: file name.
     """
     def __init__(self, file_name):
         self.file_name = file_name
-        self.message = f"Unable to load {file_name} into librosa."
+        self.message = f"Unable to load {file_name}."
         super().__init__(self.message)
 
 class MelspecShapeError(Exception):
@@ -98,7 +98,7 @@ def export(track, export_folder = "", export_name = "track.mp3", normalize = Fal
 ##### AUDIO SPLITTERS #####
 ###########################
 
-def full_split(file_path: str, slice_duration: int = 30, max_slices: int = None, export_folder: str = "",
+def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, export_folder: str = "",
                export_name: str = None, normalize: bool = False, random_slice_selection: bool = False,
                overlap: int = 0):
     """
@@ -139,7 +139,7 @@ def full_split(file_path: str, slice_duration: int = 30, max_slices: int = None,
     try:
         track = AudioSegment.from_mp3(file_path)
     except:
-        raise LibrosaAudioLoadError(file_path.split("/")[-1])
+        raise AudioLoadError(file_path.split("/")[-1])
 
     # Get duration
     track_duration = int(track.duration_seconds) # round down
@@ -226,11 +226,11 @@ def create_melspectrogram(file_path, sr = 22050, hop_length = 512, n_fft = 2048,
     try:
         track = librosa.load(file_path, sr = sr)
     except RuntimeError:
-        raise LibrosaAudioLoadError(file_path.split("/")[-1])
+        raise AudioLoadError(file_path.split("/")[-1])
     except audioread.exceptions.NoBackendError:
-        raise LibrosaAudioLoadError(file_path.split("/")[-1])
+        raise AudioLoadError(file_path.split("/")[-1])
     except EOFError:
-        raise LibrosaAudioLoadError(file_path.split("/")[-1])
+        raise AudioLoadError(file_path.split("/")[-1])
 
     # Compute melspectrogram
     S = librosa.feature.melspectrogram(y=track[0], n_fft = n_fft, hop_length = hop_length,
