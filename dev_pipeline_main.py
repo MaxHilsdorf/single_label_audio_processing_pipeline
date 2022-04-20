@@ -16,7 +16,6 @@ RAW_MP3_FOLDER = "raw_mp3s/"
 # Initiate Dataset instance
 D = Dataset(BASE_FOLDER+RAW_MP3_FOLDER)
 
-
 # Check Dataset structure valid
 dataset_valid = D.get_structure_report()
 
@@ -48,6 +47,7 @@ for cat in D.categories:
     print(f"{cat}: {n_mp3s}")
 print()
 
+
 ############################
 ## CREATE MELSPECTROGRAMS ##
 ############################
@@ -71,6 +71,11 @@ print()
 ## AGGREGATE DATA ##
 ####################
 
+print(D.line)
+print("SPEC AGGREGATION")
+print(D.line)
+print()
+
 # Generate a dictionary for train-validation-test split
 '''
 Custom splits are possible if given in the form:
@@ -81,8 +86,19 @@ category_2: ...
 val_track_name refers to the track name WITHOUT .mp3 ending.
 '''
 
-train_test_val_dict = D.create_train_val_test_dict(relative_sizes=(0.8,0.1,0.1), seed=10)
-with open(D.dataset_folder+"train_test_val_dict.json", "w") as file:
-    json.dump(train_test_val_dict, file)
+train_val_test_dict = D.create_train_val_test_dict(relative_sizes=(0.8,0.1,0.1), seed=10)
+with open(D.dataset_folder+"train_val_test_dict.json", "w") as file:
+    json.dump(train_val_test_dict, file)
 
+DATA_FOLDER = "training_data/"
+
+D.create_training_datasets(D.dataset_folder+DATA_FOLDER, train_val_test_dict, assert_shape=None, bit=16)
+
+print("Specs aggregated")
+print()
+
+
+#####################
+## DATA PROCESSING ##
+#####################
 

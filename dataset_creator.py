@@ -11,6 +11,7 @@ corresponding to the k classes for the classification task.
 """
 
 import os
+from tracemalloc import is_tracing
 import numpy as np
 from pydub import AudioSegment
 import random
@@ -218,7 +219,7 @@ class Dataset:
         None.
         """
 
-        self.spec_folder = target_path
+        self.spectrogram_folder = target_path
 
         # Create all required folders
         if not os.path.exists(target_path):
@@ -272,6 +273,8 @@ class Dataset:
 
                 # Store melspectrogram as array
                 np.save(f"{target_path}{cat}/{track[:-4]}_melspec.npy", melspec)
+
+
             print()
 
 
@@ -300,15 +303,36 @@ class Dataset:
 
         return sample_dict
 
-    def create_training_dataset_by_val_test_dict(self, target_path:str, train_val_test_dict, assert_shape = None, bit=16):
+
+    def get_spec_counts_from_train_val_test_dict(self, train_val_test_dict:dict):
         """
-        Alternative version of "create_training_dataset". This method creates seperate datasets for
-        training, validation, and testing.
+        Counts the number of spectrograms in the train-, val-, and test dataset for each category.
+        """
+
+        spec_count_dict = {cat:{"train":0,"val":0,"test":0} for cat in self.categories}
+
+        for cat in self.categories:
+
+            spec_names = os.listdir(self.spectrogram_folder+cat+"/")
+            n_specs_total = len(spec_names)
+
+            for track_name in train_val_test_dict[cat]["val"]:
+                spec_count_dict[cat]["val"] += sum(track_name in spec_name for spec_name in spec_names)
+            for track_name in train_val_test_dict[cat]["test"]:
+                spec_count_dict[cat]["test"] += sum(track_name in spec_name for spec_name in spec_names)
+            
+            spec_count_dict[cat]["train"] = n_specs_total - spec_count_dict[cat]["val"] - spec_count_dict[cat]["test"]
+
+        return spec_count_dict
+
+
+    def create_training_datasets(self, target_path:str, train_val_test_dict:dict, assert_shape = None, bit=16):
+        """
+        Aggregates each category's melspectrograms to a train-, a validation-, and a test dataset.
+        Exports a train-, validation-, and test dataset for each category.
 
         Arguments
         ---------
-        <melspec_path>:
-            Specify where the relevant melspectrograms are.
         <target_path>:
             Specify a folder to create the new dataset in.
         <val_test_dict>:
@@ -318,117 +342,129 @@ class Dataset:
         <assert_shape>:
             Melspecs which differ from the given shape are ignored.
             Default: False
+        <bit>:
+            Enter whether numpy arrays should be 16, 32, or 64 bit arrays.
+            Default: 16
         Returns
         -------
         None.
         """
 
         self.data_folder = target_path
+        self.train_val_test_dict = train_val_test_dict
+
+        # Create target folder
+        if not os.path.exists(target_path):
+            os.makedirs(target_path)
 
         # Write a text file assigning the categories to numbers
         with open(target_path+"category_labels.txt", "w") as file:
             for i, cat in enumerate(self.categories):
                 file.write(f"{cat}, {i}\n")
 
-        # Process category by category for shorter running time
+        # Count number of train-, val-, and test specs per category
+        self.spec_count_dict = self.get_spec_counts_from_train_val_test_dict(self.train_val_test_dict)
 
-        # For every category, consider all tracks
+        # Count total sizes of train-, val-, and test data
+        n_train = sum(self.spec_count_dict[cat]["train"] for cat in self.categories)
+        n_val = sum(self.spec_count_dict[cat]["val"] for cat in self.categories)
+        n_test = sum(self.spec_count_dict[cat]["test"] for cat in self.categories)
+
+        # Get spectrogram shape
+        if assert_shape:
+            self.spec_shape = assert_shape
+        else:
+            first_spec_name = os.listdir(self.spectrogram_folder+self.categories[0]+"/")[0]
+            self.spec_shape = np.load(self.spectrogram_folder+self.categories[0]+"/"+first_spec_name).shape
+
+        # Create zero arrays to fill with spectrograms
+        specs_train = np.zeros((n_train, self.spec_shape[0], self.spec_shape[1]), dtype=f"float{bit}")
+        specs_val = np.zeros((n_val, self.spec_shape[0], self.spec_shape[1]), dtype=f"float{bit}")
+        specs_test = np.zeros((n_test, self.spec_shape[0], self.spec_shape[1]), dtype=f"float{bit}")
+
+        labels_train = np.zeros(n_train, dtype=f"int{bit}")
+        labels_val = np.zeros(n_val, dtype=f"int{bit}")
+        labels_test = np.zeros(n_test, dtype=f"int{bit}")
+    
+        # Process specs category by category
+        
+        i_train = 0
+        i_val = 0
+        i_test = 0
+
         for i, cat in enumerate(self.categories):
-
-            n_train = 0
-            n_val = 0
-            n_test = 0
-
-            # If category already processed, skip to next
-            if f"melspecs_train_{cat}.npy" in os.listdir(target_path):
-                print(f"{cat} fully processed. Skipping.")
-                print()
-                continue
 
             print(f"Processing {cat}")
             print()
 
             # Get all audio tracks in the category
-            cat_tracks = os.listdir(melspec_path+cat)
+            cat_tracks = os.listdir(self.spectrogram_folder+cat)
 
             # For each track, slice the track and export slices to target_path
             for j, spec in enumerate(cat_tracks):
 
-                if j % 250 == 0:
+                if j % 100 == 0:
                     print(f"processing {j}/{len(cat_tracks)}")
 
                 # Load melspec
                 try:
-                    ms = np.load(f"{melspec_path}{cat}/{spec}", allow_pickle = True).astype(f"float{bit}")
+                    ms = np.load(f"{self.spectrogram_folder}{cat}/{spec}", allow_pickle = True).astype(f"float{bit}")
                 except:
                     print(f"Could not load {spec}")
                     continue
 
-                if np.isnan(ms).sum() > 0:
-                    print("NAN", spec)
+                # If a melspecs shape is incorrect, skip it
+                if ms.shape != self.spec_shape:
+                    print(f"{spec} has wrong shape")
+                    continue
 
                 # Check if track is a validation/test track
                 is_test_track = False
                 is_val_track = False
-                mp3_name = "_".join(spec.split("_")[:-2])+".mp3"
-                #print(mp3_name)
-                if mp3_name in val_test_dict["test"][cat]:
+                mp3_name = "_".join(spec.split("_")[:-2])
+                if mp3_name in self.train_val_test_dict[cat]["test"]:
                     is_test_track = True
-                    n_test += 1
-                elif mp3_name in val_test_dict["validation"][cat]:
+                elif mp3_name in self.train_val_test_dict[cat]["val"]:
                     is_val_track = True
-                    n_val += 1
+
+                if is_val_track:
+                    try:
+                        specs_val[i_val,:,:] = ms
+                        labels_val[i_val] = i
+                        i_val += 1
+                    except IndexError:
+                        continue
+
+                elif is_test_track:
+                    try:
+                        specs_test[i_test,:,:] = ms
+                        labels_test[i_test] = i
+                        i_test += 1
+                    except IndexError:
+                        continue
                 else:
-                    n_train += 1
-                    pass
-
-                # If no shape assertion is given, derive shape from first melspec
-                if not assert_shape and j == 0:
-                    melspecs_train = np.zeros((1, ms.shape[0], ms.shape[1]), dtype=f"float{bit}")
-                    melspecs_val = np.zeros((1, ms.shape[0], ms.shape[1]), dtype=f"float{bit}")
-                    melspecs_test = np.zeros((1, ms.shape[0], ms.shape[1]), dtype=f"float{bit}")
-
-                elif assert_shape and j == 0:
-                    melspecs_train = np.zeros((1, assert_shape[0], assert_shape[1]), dtype=f"float{bit}")
-                    melspecs_val = np.zeros((1, assert_shape[0], assert_shape[1]), dtype=f"float{bit}")
-                    melspecs_test = np.zeros((1, assert_shape[0], assert_shape[1]), dtype=f"float{bit}")
-
-                # Concatenate existing melspecs
-
-                try: # If a melspecs shape is incorrect, skip it
-                    ms = ms.reshape((1,melspecs_train.shape[1], melspecs_train.shape[2]))
-                except ValueError:
-                    print(f"{spec} has an incorrect shape.")
-                    continue
-
-                if is_test_track:
-                    melspecs_test = np.concatenate([melspecs_test, ms], axis = 0)
-                elif is_val_track:
-                    melspecs_val = np.concatenate([melspecs_val, ms], axis = 0)
-                else:
-                    melspecs_train = np.concatenate([melspecs_train, ms], axis = 0)
-
-            print()
-            print("processed", cat)
-            print("- "*10)
-            print("Train Size:", n_train)
-            print("Validation Size:", n_val)
-            print("Test Size:", n_test)
-            print("- "*10)
-            print()
-
-            # Store arrays
-            np.save(target_path+f"melspecs_train_{cat}.npy", melspecs_train)
-            np.save(target_path+f"melspecs_val_{cat}.npy", melspecs_val)
-            np.save(target_path+f"melspecs_test_{cat}.npy", melspecs_test)
-            #np.save(target_path+f"categories_train_{cat}.npy", labels_train_onehot)
-            #np.save(target_path+f"categories_test_{cat}.npy", labels_test_onehot)
+                    try:
+                        specs_train[i_train,:,:] = ms
+                        labels_train[i_train] = i
+                        i_train += 1
+                    except IndexError:
+                        continue
 
             print(f"{cat} processed")
             #print(f"spec shape was: {melspecs_train_normalized.shape}")
             print()
 
+        print("All categories processed. Saving arrays.")
+        # Store arrays
+        np.save(target_path+"specs_train.npy", specs_train)
+        np.save(target_path+"labels_train.npy", labels_train)
+        np.save(target_path+"specs_val.npy", specs_val)
+        np.save(target_path+"labels_val.npy", labels_val)
+        np.save(target_path+"specs_test.npy", specs_test)
+        np.save(target_path+"labels_test.npy", labels_test)
 
+        print("Created training datasets")
+        print()
 
     def create_audio_augmentations(self, val_test_dict: dict, p_aug: float, n_aug: int, assert_shape: tuple,
                                     reg_mp3_folder: str="processed_mp3s/", aug_mp3_folder: str="augmented_mp3s/",
