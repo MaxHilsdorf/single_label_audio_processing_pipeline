@@ -12,8 +12,8 @@ import numpy as np
 
 class DataProcessor:
 
-    def __init__(self, data_path: str, train_data_names: tuple, export_path="",
-    val_data_names: tuple = None, test_data_names: tuple = None, efficient_load: bool = True):
+    def __init__(self, data_path:str, train_data_names:tuple, export_path="",
+    val_data_names:tuple=None, test_data_names:tuple=None, efficient_load:bool=True):
 
         self.data_is_split = False
         if val_data_names and test_data_names:
@@ -94,7 +94,6 @@ class DataProcessor:
 
             np.save(self.export_path+test_data_names[0], self.test_inputs)
             np.save(self.export_path+test_data_names[1], self.test_targets)
-
 
 ######################
 ## HELPER FUNCTIONS ##
