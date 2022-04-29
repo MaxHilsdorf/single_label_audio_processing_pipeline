@@ -97,8 +97,3 @@ D.create_training_datasets(D.dataset_folder+DATA_FOLDER, train_val_test_dict, as
 print("Specs aggregated")
 print()
 
-
-#####################
-## DATA PROCESSING ##
-#####################
-
