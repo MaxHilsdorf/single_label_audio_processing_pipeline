@@ -170,18 +170,14 @@ class Dataset:
                     continue
 
                 # Subcase: track not processed yet
-                try:
-                    audio_processor.slice_mp3(file_path = self.raw_mp3_folder+cat+"/"+track,
-                                                     slice_duration = slice_duration,
-                                                     max_slices = max_slices,
-                                                     export_folder = target_path+"/"+cat+"/",
-                                                     export_name = None,
-                                                     normalize = normalize_mp3s,
-                                                     random_slice_selection = random_slice_selection,
-                                                     overlap = overlap)
-                except audio_processor.AudioLoadError:
-                    print("Unable to load", track)
-                continue
+                audio_processor.slice_mp3(file_path = self.raw_mp3_folder+cat+"/"+track,
+                                                    slice_duration = slice_duration,
+                                                    max_slices = max_slices,
+                                                    export_folder = target_path+"/"+cat+"/",
+                                                    export_name = None,
+                                                    normalize = normalize_mp3s,
+                                                    random_slice_selection = random_slice_selection,
+                                                    overlap = overlap)
 
 
             print(f"Finished processing {cat}")
@@ -261,20 +257,13 @@ class Dataset:
                         continue
 
                 # Get melspectrogram
-                try:
-                    melspec = audio_processor.create_melspectrogram(file_path = self.processed_mp3_folder+cat+"/"+track,
-                                                   sr = sr, hop_length = hop_length,
-                                                   n_fft = n_fft, n_mels = n_mels,
-                                                   assert_shape = assert_shape, bit = bit)
-
-                except audio_processor.AudioLoadError:
-                        print("Unable to load", track)
-                        continue
+                melspec = audio_processor.create_melspectrogram(file_path = self.processed_mp3_folder+cat+"/"+track,
+                                                sr = sr, hop_length = hop_length,
+                                                n_fft = n_fft, n_mels = n_mels,
+                                                assert_shape = assert_shape, bit = bit)
 
                 # Store melspectrogram as array
                 np.save(f"{target_path}{cat}/{track[:-4]}_melspec.npy", melspec)
-
-
             print()
 
 
@@ -495,12 +484,8 @@ class Dataset:
 
             for to_aug in to_aug_tracks:
 
-                try:
-                    signal, sr = librosa.load(self.dataset_folder+reg_mp3_folder+cat+"/"+to_aug,
-                                              sr = sr)
-                except audio_processor.AudioLoadError:
-                    print("Unable to load", to_aug)
-                    continue
+                signal, sr = librosa.load(self.dataset_folder+reg_mp3_folder+cat+"/"+to_aug,
+                                        sr = sr)
 
                 for j in range(n_aug):
 

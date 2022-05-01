@@ -19,35 +19,6 @@ import os
 from io import BytesIO
 import random
 
-#####################
-#### EXCEPTIONS #####
-#####################
-
-class AudioLoadError(Exception):
-    """ Raised when unable to read an audio file.
-    Attributes:
-        file_name: file name.
-    """
-    def __init__(self, file_name):
-        self.file_name = file_name
-        self.message = f"Unable to load {file_name}."
-        super().__init__(self.message)
-
-class MelspecShapeError(Exception):
-    """ Raised when a specific melspectrogram shape is asserted and a particular
-    melspectrogram does not satisfy this assertion.
-    Attributes:
-        file_name: file name.
-        melspec_shape: real melspectrogram shape.
-        asserted_shape: asserted melspectrogram shape.
-    """
-    def __init__(self, file_name, melspec_shape, asserted_shape):
-        self.file_name = file_name
-        self.melspec_shape = melspec_shape
-        self.message = f"{file_name} has melspec shape {melspec_shape}, but {asserted_shape} was asserted."
-        super().__init__(self.message)
-
-
 ############################
 ##### HELPER FUNCTIONS #####
 ############################
@@ -136,10 +107,7 @@ def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, 
     """
 
     # Load track
-    try:
-        track = AudioSegment.from_mp3(file_path)
-    except:
-        raise AudioLoadError(file_path.split("/")[-1])
+    track = AudioSegment.from_mp3(file_path)
 
     # Get duration
     track_duration = int(track.duration_seconds) # round down
@@ -229,14 +197,7 @@ def create_melspectrogram(file_path, sr = 22050, hop_length = 512, n_fft = 2048,
     """
 
     # Load track into librosa (with exception handling)
-    try:
-        track = librosa.load(file_path, sr = sr)
-    except RuntimeError:
-        raise AudioLoadError(file_path.split("/")[-1])
-    except audioread.exceptions.NoBackendError:
-        raise AudioLoadError(file_path.split("/")[-1])
-    except EOFError:
-        raise AudioLoadError(file_path.split("/")[-1])
+    track = librosa.load(file_path, sr = sr)
 
     # Compute melspectrogram
     S = librosa.feature.melspectrogram(y=track[0], n_fft = n_fft, hop_length = hop_length,
@@ -245,14 +206,7 @@ def create_melspectrogram(file_path, sr = 22050, hop_length = 512, n_fft = 2048,
 
     # Raise error if melspec shape does not satisfy shape assertion
     if assert_shape:
-        if S.shape != assert_shape:
-
-            if S.shape[1] > assert_shape[1]:
-                raise MelspecShapeError(file_path.split("/")[-1], S.shape, assert_shape)
-
-            elif S.shape[1] < assert_shape[1]:
-                #print("padding", file_path)
-                S_dB = np.pad(S_dB, ((0,0),(0,assert_shape[1]-S_dB.shape[1])))
+        assert S.shape[1] == assert_shape
 
     # Plot spectrogram is requested
     if plot:
