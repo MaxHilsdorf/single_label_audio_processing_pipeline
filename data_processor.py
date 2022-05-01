@@ -13,40 +13,46 @@ import numpy as np
 class DataProcessor:
 
     def __init__(self, data_path:str, train_data_names:tuple, export_path="",
-    val_data_names:tuple=None, test_data_names:tuple=None, efficient_load:bool=True):
+    val_data_names:tuple=None, test_data_names:tuple=None,
+    export_suffix:str="processed", efficient_load:bool=True):
 
         self.data_is_split = False
         if val_data_names and test_data_names:
             self.data_is_split = True
 
-        self.data_path=data_path
+        self.data_path = data_path
         self.export_path = export_path
+        self.export_suffix = export_suffix
+
+        self.train_data_names = train_data_names
+        self.val_data_names = val_data_names
+        self.test_data_names = test_data_names
 
         # Load data
 
         if self.data_is_split: # -> data is already split
 
             if efficient_load:
-                self.train_inputs = np.load(self.data_path+train_data_names[0], mmap_mode="r+")
-                self.train_targets = np.load(self.data_path+train_data_names[1], mmap_mode="r+")
-                self.val_inputs = np.load(self.data_path+val_data_names[0], mmap_mode="r+")
-                self.val_targets = np.load(self.data_path+val_data_names[1], mmap_mode="r+")
-                self.test_inputs = np.load(self.data_path+test_data_names[0], mmap_mode="r+")
-                self.test_targets = np.load(self.data_path+test_data_names[1], mmap_mode="r+")
+                self.train_inputs = np.load(self.data_path+self.train_data_names[0], mmap_mode="r+")
+                self.train_targets = np.load(self.data_path+self.train_data_names[1], mmap_mode="r+")
+                self.val_inputs = np.load(self.data_path+self.val_data_names[0], mmap_mode="r+")
+                self.val_targets = np.load(self.data_path+self.val_data_names[1], mmap_mode="r+")
+                self.test_inputs = np.load(self.data_path+self.test_data_names[0], mmap_mode="r+")
+                self.test_targets = np.load(self.data_path+self.test_data_names[1], mmap_mode="r+")
             else:
-                self.train_inputs = np.load(self.data_path+train_data_names[0])
-                self.train_targets = np.load(self.data_path+train_data_names[1])
-                self.val_inputs = np.load(self.data_path+val_data_names[0])
-                self.val_targets = np.load(self.data_path+val_data_names[1])
-                self.test_inputs = np.load(self.data_path+test_data_names[0])
-                self.test_targets = np.load(self.data_path+test_data_names[1])
+                self.train_inputs = np.load(self.data_path+self.train_data_names[0])
+                self.train_targets = np.load(self.data_path+self.train_data_names[1])
+                self.val_inputs = np.load(self.data_path+self.val_data_names[0])
+                self.val_targets = np.load(self.data_path+self.val_data_names[1])
+                self.test_inputs = np.load(self.data_path+self.test_data_names[0])
+                self.test_targets = np.load(self.data_path+self.test_data_names[1])
         else:
             if efficient_load:
-                self.train_inputs = np.load(self.data_path+train_data_names[0], mmap_mode="r+")
-                self.train_targets = np.load(self.data_path+train_data_names[1], mmap_mode="r+")
+                self.train_inputs = np.load(self.data_path+self.train_data_names[0], mmap_mode="r+")
+                self.train_targets = np.load(self.data_path+self.train_data_names[1], mmap_mode="r+")
             else:
-                self.train_inputs = np.load(self.data_path+train_data_names[0])
-                self.train_targets = np.load(self.data_path+train_data_names[1])
+                self.train_inputs = np.load(self.data_path+self.train_data_names[0])
+                self.train_targets = np.load(self.data_path+self.train_data_names[1])
 
     def normalize_data(self, method:str):
         """
@@ -78,22 +84,23 @@ class DataProcessor:
             self.test_inputs, self.test_targets = shuffle(self.test_inputs, self.test_targets, seed=seed)
 
 
-    def export_data(self, train_data_names : tuple, val_data_names : tuple=None,
-                    test_data_names : tuple=None):
+    def export_data(self):
         """
         Exports the processed data.
         """
 
-        np.save(self.export_path+train_data_names[0], self.train_inputs)
-        np.save(self.export_path+train_data_names[1], self.train_targets)
+        full_export_suffix = "_"+self.export_suffix+".npy"
+
+        np.save(self.export_path+self.train_data_names[0][:-4]+full_export_suffix, self.train_inputs)
+        np.save(self.export_path+self.train_data_names[1][:-4]+full_export_suffix, self.train_targets)
 
         if self.data_is_split:
 
-            np.save(self.export_path+val_data_names[0], self.val_inputs)
-            np.save(self.export_path+val_data_names[1], self.val_targets)
+            np.save(self.export_path+self.val_data_names[0][:-4]+full_export_suffix, self.val_inputs)
+            np.save(self.export_path+self.val_data_names[1][:-4]+full_export_suffix, self.val_targets)
 
-            np.save(self.export_path+test_data_names[0], self.test_inputs)
-            np.save(self.export_path+test_data_names[1], self.test_targets)
+            np.save(self.export_path+self.test_data_names[0][:-4]+full_export_suffix, self.test_inputs)
+            np.save(self.export_path+self.test_data_names[1][:-4]+full_export_suffix, self.test_targets)
 
 ######################
 ## HELPER FUNCTIONS ##

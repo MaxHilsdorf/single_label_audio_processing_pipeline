@@ -1,5 +1,4 @@
 from dataset_creator import Dataset
-from data_processor import DataProcessor, normalize
 import numpy as np
 import json
 import os
