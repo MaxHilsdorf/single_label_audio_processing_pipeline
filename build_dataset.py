@@ -4,13 +4,20 @@ import json
 import os
 
 
+#####################
+## LOAD PARAMETERS ##
+#####################
+
+with open("pipeline_parameters.json", "r") as file:
+    param_dict = json.load(file)
+
+
 #################
 ## BASIC SETUP ##
 #################
 
-# Define dataset paths
-BASE_FOLDER = "F:/music_datasets/dev_dataset/"
-RAW_MP3_FOLDER = "raw_mp3s/"
+BASE_FOLDER = param_dict["project_folders"]["base_folder"]
+RAW_MP3_FOLDER = param_dict["project_folders"]["raw_mp3_folder"]
 
 # Initiate Dataset instance
 D = Dataset(BASE_FOLDER+RAW_MP3_FOLDER)
@@ -32,11 +39,20 @@ print("PROCESSING MP3s")
 print(D.line)
 print()
 
-SLICED_MP3_FOLDER = "processed_mp3s/"
-SLICE_DURATION = 10 # in seconds
+# Load params
+slice_params = param_dict["build_dataset_params"]["audio_slicing_params"]
+
+SLICED_MP3_FOLDER = slice_params["sliced_mp3_folder"]
+SLICE_DURATION = slice_params["slice_duration"]
+MAX_SLICES = slice_params["max_slices"]
+OVERLAP = slice_params["overlap"]
+RANDOM_SLICE_SELECTION = slice_params["random_slice_selection"]
+NORMALIZE_MP3S = slice_params["normalize_mp3s"]
 
 # Adjust parameters to your liking
-D.create_mp3_dataset(target_path=D.dataset_folder+SLICED_MP3_FOLDER, slice_duration=SLICE_DURATION, max_slices=2, random_slice_selection=True, overlap=0, normalize_mp3s=True)
+D.create_mp3_dataset(target_path=D.dataset_folder+SLICED_MP3_FOLDER, slice_duration=SLICE_DURATION,
+                    max_slices=MAX_SLICES, random_slice_selection=RANDOM_SLICE_SELECTION,
+                    overlap=OVERLAP, normalize_mp3s=NORMALIZE_MP3S)
 
 print(D.line)
 print("MP3s processed")
@@ -57,10 +73,18 @@ print("CREATING SPECTROGRAMS")
 print(D.line)
 print()
 
-SPEC_FOLDER = "spectrograms/"
+# Load params
+spec_params = param_dict["build_dataset_params"]["melspec_creation_params"]
+
+SPEC_FOLDER = spec_params["spec_folder"]
+SAMPLE_RATE = spec_params["sample_rate"]
+HOP_LENGTH = spec_params["hop_length"]
+N_FFT = spec_params["n_fft"]
+N_MELS = spec_params["n_mels"]
 
 D.create_melspec_dataset(target_path = D.dataset_folder+SPEC_FOLDER,
-                         sr = 22050, hop_length = 1024, n_fft = 2048, n_mels = 90)
+                         sr = SAMPLE_RATE, hop_length = HOP_LENGTH,
+                         n_fft = N_FFT, n_mels = N_MELS)
 
 print("Spectrograms created")
 print()
@@ -75,6 +99,12 @@ print("SPEC AGGREGATION")
 print(D.line)
 print()
 
+# Load params
+agg_params = param_dict["build_dataset_params"]["melspec_aggregation_params"]
+
+CUSTOM_DICT = agg_params["custom_train_val_test_dict"]
+DATA_FOLDER = agg_params["data_folder"]
+
 # Generate a dictionary for train-validation-test split
 '''
 Custom splits are possible if given in the form:
@@ -85,11 +115,10 @@ category_2: ...
 val_track_name refers to the track name WITHOUT .mp3 ending.
 '''
 
-train_val_test_dict = D.create_train_val_test_dict(relative_sizes=(0.8,0.1,0.1), seed=10)
+if not CUSTOM_DICT:
+    train_val_test_dict = D.create_train_val_test_dict(relative_sizes=(0.8,0.1,0.1), seed=10)
 with open(D.dataset_folder+"train_val_test_dict.json", "w") as file:
     json.dump(train_val_test_dict, file)
-
-DATA_FOLDER = "training_data/"
 
 D.create_training_datasets(D.dataset_folder+DATA_FOLDER, train_val_test_dict, assert_shape=None, bit=16)
 

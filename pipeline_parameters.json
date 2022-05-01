@@ -1,0 +1,39 @@
+{
+    "project_folders": {
+        "base_folder": "F:/music_datasets/dev_dataset/",
+        "raw_mp3_folder": "raw_mp3s/"
+    },
+
+
+    "build_dataset_params":{
+
+        "audio_slicing_params":{
+            "sliced_mp3_folder": "processed_mp3s/",
+            "slice_duration": 10,
+            "max_slices": 3,
+            "overlap": 0,
+            "random_slice_selection": true,
+            "normalize_mp3s": true
+        },
+        "melspec_creation_params":{
+            "spec_folder": "spectrograms/",
+            "sample_rate": 22050,
+            "hop_length": 1024,
+            "n_fft": 2048,
+            "n_mels": 100
+        },
+        "melspec_aggregation_params":{
+            "custom_train_val_test_dict": false,
+            "data_folder": "training_data/"
+        }
+    },
+
+
+    "process_dataset_params":{
+        
+        "norm_method": "non_zero_min_max",
+        "shuffle": true,
+        "export_suffix": "processed"
+    }
+
+}

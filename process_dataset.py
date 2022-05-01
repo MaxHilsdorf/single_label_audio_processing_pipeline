@@ -1,11 +1,20 @@
 from data_processor import DataProcessor
 import numpy as np
+import json
 import os
 
-SHUFFLE = True
-NORM_METHOD = "non_zero_min_max" # None, min_max, non_zero_min_max
-EXPORT_SUFFIX = "processed" # will be added to old file names
-DATA_FOLDER = "F:/music_datasets/dev_dataset/training_data/"
+# Load Param Dict
+with open("pipeline_parameters.json", "r") as file:
+    param_dict = json.load(file)
+
+# Fetch Params
+BASE_FOLDER = param_dict["project_folders"]["base_folder"]
+TRAIN_DATA_FOLDER = param_dict["build_dataset_params"]["melspec_aggregation_params"]["data_folder"]
+
+SHUFFLE = param_dict["process_dataset_params"]["shuffle"]
+NORM_METHOD = param_dict["process_dataset_params"]["norm_method"]
+EXPORT_SUFFIX = param_dict["process_dataset_params"]["export_suffix"]
+DATA_FOLDER = BASE_FOLDER+TRAIN_DATA_FOLDER
 TRAIN_DATA_NAMES = ("specs_train.npy", "labels_train.npy")
 VAL_DATA_NAMES = ("specs_val.npy", "labels_val.npy")
 TEST_DATA_NAMES = ("specs_test.npy", "labels_test.npy")
