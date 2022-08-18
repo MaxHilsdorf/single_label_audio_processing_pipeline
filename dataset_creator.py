@@ -142,6 +142,9 @@ class Dataset:
 
             # Get all audio tracks in the category
             cat_tracks = os.listdir(self.raw_mp3_folder+cat)
+            if len(cat_tracks) == 0:
+                print("no files in this category folder")
+                return
 
             # Case: entire category is already processed
             # that is the case if the last track or the second to last track in the category

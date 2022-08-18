@@ -19,7 +19,8 @@ class Track:
         else:
             self.name = ".".join(self.mp3_path.split("/")[-1].split(".")[:-1])
         self.spec_shape = assert_shape
-        self.audio_segment = AudioSegment.from_mp3(self.mp3_path).set_frame_rate(sr)
+        self.audio_segment = AudioSegment.from_mp3(self.mp3_path).set_frame_rate(int(sr/2))
+        #self.audio_segment = AudioSegment.from_mp3(self.mp3_path)
         self.duration = int(self.audio_segment.duration_seconds) # round down
         self.sub_segments = self.build_segments(slice_duration=slice_duration, overlap=overlap,
                             hop_length=hop_length, n_fft=n_fft, n_mels=n_mels, assert_shape=self.spec_shape)
@@ -58,13 +59,13 @@ class TrackSegment:
 class TrackAnalyzer:
 
     def __init__(self, model, track, normalize_method: str="non_zero_min_max",
-                    expand_dims: bool=True):
+                    expand_dims: bool=True, swap_axes: bool=False):
 
         self.model = model
         self.track = track
-        self.spectrograms = self.process_spectrograms(normalize_method, expand_dims)
+        self.spectrograms = self.process_spectrograms(normalize_method, expand_dims, swap_axes)
 
-    def process_spectrograms(self,normalize_method: str="non_zero_min_max", expand_dims: bool=True):
+    def process_spectrograms(self,normalize_method: str="non_zero_min_max", expand_dims: bool=True, swap_axes: bool=False):
 
         # Aggregate spectrograms
         specs = np.zeros((len(self.track.sub_segments), self.track.spec_shape[0], self.track.spec_shape[1]))
@@ -83,6 +84,10 @@ class TrackAnalyzer:
         # Expand dims
         if expand_dims:
             specs = np.expand_dims(specs, 3)
+            
+        # Switch axes
+        if swap_axes:
+            specs = np.swapaxes(specs, 1,2)
 
         return specs
 

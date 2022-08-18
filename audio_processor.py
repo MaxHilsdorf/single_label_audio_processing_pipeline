@@ -10,6 +10,7 @@ e.g. audio slicing, audio quality adjustment, and creating spectrograms.
 """
 
 from pydub import AudioSegment, effects
+from pydub.exceptions import CouldntDecodeError
 import librosa, librosa.display
 import numpy as np
 import audioread
@@ -107,7 +108,11 @@ def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, 
     """
 
     # Load track
-    track = AudioSegment.from_mp3(file_path)
+    try:
+        track = AudioSegment.from_mp3(file_path)
+    except CouldntDecodeError:
+        print("could not load", file_path.split("/")[-1])
+        return
 
     # Get duration
     track_duration = int(track.duration_seconds) # round down

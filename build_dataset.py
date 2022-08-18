@@ -11,7 +11,6 @@ import os
 with open("pipeline_parameters.json", "r") as file:
     param_dict = json.load(file)
 
-
 #################
 ## BASIC SETUP ##
 #################

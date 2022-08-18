@@ -10,7 +10,7 @@
         "audio_slicing_params":{
             "sliced_mp3_folder": "processed_mp3s/",
             "slice_duration": 10,
-            "max_slices": 3,
+            "max_slices": 2,
             "overlap": 0,
             "random_slice_selection": true,
             "normalize_mp3s": true
