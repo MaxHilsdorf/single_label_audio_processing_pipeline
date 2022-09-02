@@ -142,9 +142,6 @@ class Dataset:
 
             # Get all audio tracks in the category
             cat_tracks = os.listdir(self.raw_mp3_folder+cat)
-            if len(cat_tracks) == 0:
-                print("no files in this category folder")
-                return
 
             # Case: entire category is already processed
             # that is the case if the last track or the second to last track in the category
@@ -185,7 +182,6 @@ class Dataset:
 
             print(f"Finished processing {cat}")
             print()
-
 
     def create_melspec_dataset(self, target_path, sr = 22050, hop_length = 1024, n_fft = 2048,
                                n_mels = 60, assert_shape = None, bit = 16):
@@ -309,12 +305,13 @@ class Dataset:
             n_specs_total = len(spec_names)
 
             for track_name in train_val_test_dict[cat]["val"]:
-                spec_count_dict[cat]["val"] += sum(track_name in spec_name for spec_name in spec_names)
+                spec_count_dict[cat]["val"] += sum(track_name+"_" in spec_name for spec_name in spec_names)
             for track_name in train_val_test_dict[cat]["test"]:
-                spec_count_dict[cat]["test"] += sum(track_name in spec_name for spec_name in spec_names)
+                spec_count_dict[cat]["test"] += sum(track_name+"_" in spec_name for spec_name in spec_names)
             
             spec_count_dict[cat]["train"] = n_specs_total - spec_count_dict[cat]["val"] - spec_count_dict[cat]["test"]
 
+        
         return spec_count_dict
 
 
