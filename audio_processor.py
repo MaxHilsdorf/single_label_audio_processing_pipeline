@@ -65,10 +65,21 @@ def export(track, export_folder = "", export_name = "track.mp3", normalize = Fal
     else:
         track.export(f"{export_name}.mp3")
 
-
+def add_silence(track, target_duration: int):
+    """Adds silence to a track such that a given duration is reached"""
+    diff = target_duration - track.duration_seconds
+    
+    if diff > 0:
+        
+        silence = AudioSegment.silent(duration=diff*1000)
+        track += silence
+    
+    return track
+    
 ###########################
 ##### AUDIO SPLITTERS #####
 ###########################
+
 
 def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, export_folder: str = "",
                export_name: str = None, normalize: bool = False, random_slice_selection: bool = False,
@@ -139,6 +150,8 @@ def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, 
         for i, (start, end) in enumerate(slices[:max_slices]):
 
             track_slice = track[start:end] # get slice
+            
+            track_slice = add_silence(track_slice, target_duration=slice_duration) # pad track slice with silence if needed
 
             if export_name:
                 export(track_slice, export_folder, f"{export_name}_{i+1}",
@@ -149,12 +162,14 @@ def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, 
                        normalize = normalize) # export with standard file name
 
     # If no max slice threshold is given or the track is short enough
-    else:
+    elif len(slices) > 0:
         # Apply each slice to track and export
         for i, (start, end) in enumerate(slices):
 
             track_slice = track[start:end] # get slice
-
+        
+            track_slice = add_silence(track_slice, target_duration=slice_duration) # pad track slice with silence if needed
+            
             if export_name:
                 export(track_slice, export_folder, f"{export_name}_{i+1}",
                        normalize = normalize) # export with custom file name
@@ -162,6 +177,19 @@ def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, 
                 file_name = file_path.split("/")[-1][:-4]
                 export(track_slice, export_folder, f"{file_name}_{i+1}",
                        normalize = normalize) # export with standard file name
+                
+    # If no full slice can be drawn, just export the whole track
+    else:
+        
+        track = add_silence(track, target_duration=slice_duration) # pad track with silence if needed
+        
+        if export_name:
+            export(track, export_folder, f"{export_name}_{1}",
+                    normalize = normalize) # export with custom file name
+        else:
+            file_name = file_path.split("/")[-1][:-4]
+            export(track, export_folder, f"{file_name}_{1}",
+                    normalize = normalize) # export with standard file name
 
 ##############################
 ##### FEATURE EXTRACTION #####
