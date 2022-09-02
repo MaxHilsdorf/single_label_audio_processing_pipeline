@@ -50,21 +50,9 @@ def export(track, export_folder = "", export_name = "track.mp3", normalize = Fal
     # Normalize if requested
     if normalize:
         track = effects.normalize(track)
-
-    # Pydub can only export to existing file_paths
-    # If export_folder is non-existent, it must be created
-
-    if export_folder != "":
-        try:
-            os.makedirs(export_folder)
-        except FileExistsError:
-            pass
-
-        track.export(f"{export_folder}/{export_name}.mp3")
-
-    else:
-        track.export(f"{export_name}.mp3")
-
+        
+    track.export(f"{export_folder}/{export_name}.mp3")
+        
 def add_silence(track, target_duration: int):
     """Adds silence to a track such that a given duration is reached"""
     diff = target_duration - track.duration_seconds
@@ -75,7 +63,8 @@ def add_silence(track, target_duration: int):
         track += silence
     
     return track
-    
+
+
 ###########################
 ##### AUDIO SPLITTERS #####
 ###########################
@@ -130,14 +119,18 @@ def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, 
 
     # Calculate all possible full slices of 'slice_duration' from 0 secs till end
     step_size = slice_duration-overlap
+
+    # Determine file and export names
+    file_name = file_path.split("/")[-1][:-4]
+    if not export_name:
+        export_name = file_name
     
-    # Get starting points first, then add end points
-    starting_points = []
+    # Get start and end points of all possible slices
+    slices = []
     for p in range(0, track_duration, step_size):
         if p+slice_duration <= track_duration:
-            starting_points.append(p*1000)
-
-    slices = [(p,p+slice_duration*1000) for p in starting_points]
+            starting_point = p*1000
+            slices.append( (starting_point, starting_point+slice_duration*1000) )
 
     # Apply max slice threshold if needed
     if max_slices and len(slices) > max_slices:
@@ -153,43 +146,28 @@ def slice_mp3(file_path: str, slice_duration: int = 30, max_slices: int = None, 
             
             track_slice = add_silence(track_slice, target_duration=slice_duration) # pad track slice with silence if needed
 
-            if export_name:
-                export(track_slice, export_folder, f"{export_name}_{i+1}",
-                       normalize = normalize) # export with custom file name
-            else:
-                file_name = file_path.split("/")[-1][:-4]
-                export(track_slice, export_folder, f"{file_name}_{i+1}",
-                       normalize = normalize) # export with standard file name
+            export(track_slice, export_folder, f"{export_name}_{i+1}",
+                   normalize = normalize)
 
     # If no max slice threshold is given or the track is short enough
     elif len(slices) > 0:
+        
         # Apply each slice to track and export
         for i, (start, end) in enumerate(slices):
 
             track_slice = track[start:end] # get slice
-        
+
             track_slice = add_silence(track_slice, target_duration=slice_duration) # pad track slice with silence if needed
-            
-            if export_name:
-                export(track_slice, export_folder, f"{export_name}_{i+1}",
-                       normalize = normalize) # export with custom file name
-            else:
-                file_name = file_path.split("/")[-1][:-4]
-                export(track_slice, export_folder, f"{file_name}_{i+1}",
-                       normalize = normalize) # export with standard file name
+        
+            export(track_slice, export_folder, f"{export_name}_{i+1}",
+                   normalize = normalize) 
                 
     # If no full slice can be drawn, just export the whole track
     else:
-        
         track = add_silence(track, target_duration=slice_duration) # pad track with silence if needed
-        
-        if export_name:
-            export(track, export_folder, f"{export_name}_{1}",
-                    normalize = normalize) # export with custom file name
-        else:
-            file_name = file_path.split("/")[-1][:-4]
-            export(track, export_folder, f"{file_name}_{1}",
-                    normalize = normalize) # export with standard file name
+        export(track, export_folder, f"{export_name}_{1}",
+                normalize = normalize)
+
 
 ##############################
 ##### FEATURE EXTRACTION #####
@@ -246,40 +224,3 @@ def create_melspectrogram(file_path, sr = 22050, hop_length = 512, n_fft = 2048,
         librosa.display.specshow(S_dB)
 
     return S_dB.astype(f"float{bit}")
-
-
-############################
-##### IMAGE PROCESSING #####
-############################
-
-def get_image(file_path, export_path = "cover_art.jpg"):
-    """
-    Extracts the album cover art from an MP3 file if possible.
-
-    Arguments
-    ---------
-    <file_path>:
-        Path to the file including the file name and its format. Only mp3!
-    <export_path>:
-        (optional) Specify a path export the image to. Include type format like '.jpg'.
-        Default: Exports to this modules folder as JPG.
-
-    Returns
-    -------
-    None.
-    """
-    # Load track information
-    track = ID3(file_path)
-
-    # Convert image info to actual image (if information available)
-    try:
-        pict = track.get("APIC:").data
-
-    except AttributeError:
-        print("The file does not contain an image.")
-        return None
-
-    im = Image.open(BytesIO(pict))
-
-    # Export image
-    im.save(export_path)
