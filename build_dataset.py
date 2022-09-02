@@ -113,9 +113,19 @@ category_2: ...
 }
 val_track_name refers to the track name WITHOUT .mp3 ending.
 '''
-
 if not CUSTOM_DICT:
-    train_val_test_dict = D.create_train_val_test_dict(relative_sizes=(0.8,0.1,0.1), seed=10)
+    
+    # Get data split sizes
+    val_share = agg_params["validation_share"]
+    test_share = agg_params["test_share"]
+    if val_share + test_share < 1:  
+        train_share = 1 - val_share - test_share
+    else:
+        print("Test-, validation-, and test shares do not add up to one. Using (0.8,0.1,0.1) as default.")
+        train_share, val_share, test_share = 0.8, 0.1, 0.1
+    
+    train_val_test_dict = D.create_train_val_test_dict(relative_sizes=(train_share, val_share, test_share), seed=10)
+    
 with open(D.dataset_folder+"train_val_test_dict.json", "w") as file:
     json.dump(train_val_test_dict, file)
 
