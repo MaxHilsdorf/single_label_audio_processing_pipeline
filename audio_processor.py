@@ -13,11 +13,6 @@ from pydub import AudioSegment, effects
 from pydub.exceptions import CouldntDecodeError
 import librosa, librosa.display
 import numpy as np
-import audioread
-from mutagen.id3 import ID3
-from PIL import Image
-import os
-from io import BytesIO
 import random
 
 ############################
