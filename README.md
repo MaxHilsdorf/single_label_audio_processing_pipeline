@@ -107,31 +107,77 @@ Converts a dataset of sliced mp3s into a melspectrogram dataset.
 
 Aggregates a melspectrogram and performs a base-file-wise train-val-test split. Saves the aggregated and split datasets as numpy arrays.
 
+-----------------------------------
 
-### Audio Augmenter (audio_augmenter.py)
+## 6. Requirements
+
+As far as python libraries go, only three libraries outside of the Python Standard Library are needed:
+* numpy
+* librosa
+* pydub
+
+Additionally, the audio codec [FFmpeg](https://ffmpeg.org/download.html) must be installed on your system.
 
 -----------------------------------
 
-## 6. How to Use SLAPP
+## 7. How to Use SLAPP
+
+First, make sure all the requirements are installed (Section 6). Also download (or clone) SLAPP into a directory of your choice, which we will call "slapp_dir/". I am going to explain how to use SLAPP in formal and less-formal terms but also give an easy example.
+
+### 7.1. Required Dataset Structure
+Let's start with a formal explanation. For SLAPP to be applicable, you need to have a dataset of size $N$ with $k$ different classes/labels. Every MP3 audio file $x_1, x_2, ..., x_n$ belongs to exactly one of the classes ($c_1, ..., c_k$). This results in a dataset $D$ where every audio file $x_i$ is associated with a class label $c_i$. This means that $D_i = (x_i, c_{x_i})$ for $i \leq N$.
+In a directory of your choice, let's call it "data_dir/", open a folder "data_dir/raw_mp3s/" (other names are also possible but must be configured in ```pipeline_parameters.json```). For every class $(c_1, ..., c_k)$ open a directory "data_dir/raw_mp3s/$c_1$/". Each audio file $x_i$ must be placed in the directory "data_dir/raw_mp3s/$c_{x_i}$/$x_i$". <br> <br>
+In less formal terms, you have lots of MP3 files which belong to a single class. Open a new directory "data_dir/" for your dataset as well as a folder "raw_mp3s/" within this directory. Within the folder "raw_mp3s", open another folder named after each class in your dataset and put all the MP3s which belong to this class in there. <br> <br>
+As an easy example, imagine you have 100 speech files, where 50 were recorded by males and 50 were recorded by females. In order to build a classifier for female vs. male speech, open a directory "data_dir/raw_mp3s/male/" and a directory "data_dir/raw_mp3s/female/". Now, throw the 50 male-spoken files in the male folder and the 50 female-spoken files in the female folder.
+
+### 7.2. Set Pipeline Parameters
+To configure the pipeline according to your needs, open "slapp_dir/pipeline_parameters.json" with the text editor of your choice. Set the first part of the JSON file like this:
+```
+"project_folders": {
+    "base_folder": "<full path to your dataset>/",
+    "raw_mp3_folder": "raw_mp3s/" ( or whatever you called your mp3 folder )
+},
+```
+Adjust the paramaters under "build_dataset_params" to your liking:
+* "sliced_mp3_folder" - _str_: folder in which to store the processed MP3s
+* "slice_duration" - _int_: desired duration of all audio snippets in seconds
+* "max_slices" - _int_: maximum number of snippets to draw from a track
+* "overlap" - _int_: overlap between consecutive slices in full seconds
+* "random_slice_selection" - _bool_: if more snippets than "max_slices" are available, draw randomly or from the start?
+* "normalize_mp3s" - _bool_: bring each snippet to the maximum volume or not
+* "spec_folder" - _str_: folder in which to store the mel spectrograms
+* "sample_rate" - _int_: sampling rate
+* "hop_length" - _int_: hop length
+* "n_fft" - _int_: frame size
+* "n_mels" - _int_: number of mel filter banks
+* "custom_train_val_test_dict": _bool_ or _dict_: advanced feature which allows you to supply your custom train-validation-test split dict
+* "data_folder": _str_ - folder to store the train-, validation- and test datasets in
+
+Under "process_dataset_params", set the following parameters to your liking:
+* "norm_method": _str_ ("non_zero_min_max" or "min_max" currently implemented): data normalization method
+* "shuffle": _bool_: whether to shuffle the datasets or not
+* "export_suffix": _str_: suffix to be appended to distinguish processed from unprocessed datasets
+
+### 7.3. Run SLAPP
+
+Run ```build_dataset.py``` and then ```process_dataset.py``` to build and process your dataset.
 
 -----------------------------------
 
-## 7. Current Status
-Currently, every SLAPP feature is implemented in principle. However, there are some constraints:
-* Documentation of all modules and scripts is still work-in-progress.
-* Currently no script for applying the ```audio_augmenter.py``` module to a full dataset.
-* Exception handling must be refined. Currently, corrupt mp3 files can break the pipeline.
-* Overall, the module is not yet tested on a large enough variety of use cases.
-* Please remember the official release date is 06. September 2022
+## 8. Current Status
+SLAPP is feature-complete concerning all aspects laid out in Sections 3 to 5. Here are some plans I have on how to refine and expand SLAPP in the future:
+* Implementing an audio augmentation module to increase dataset size and build more robust models
+* Ensuring compatability of SLAPP with WAV files
+* Reworking SLAPP such that other features than mel spectrograms (e.g. MFCCs or chromagrams) can also be computed.
 
 -----------------------------------
 
-## 8. Credits
-SLAPP is the result of a study project at Justus-Liebig University of Gießen (GER). I want to thank my supervisor Prof. Ralf Köhl for his professional advice as well as for his trust in my work. Also, I thank Prof. Daniel Kaiser for his interest in my work in his role as a secondary supervisor.
+## 9. Credits
+SLAPP is the result of a study project at Justus-Liebig University of Gießen (GER). I want to thank my primary supervisor Prof. Ralf Köhl and my secondary supervisor Prof. Daniel Kaiser for their support and interest in my work.
 
 -----------------------------------
 
-## 9. License
+## 10. License
 
 MIT License<br>
 
