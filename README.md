@@ -3,7 +3,7 @@ Author: _Max Hilsdorf_
 
 -----------------------------------
 ## 1. What is SLAPP?
-__SLAPP__ is a data processing pipeline suitable for a wide range of single label audio classification tasks. Currently, it is able to transform a dataset of labeled mp3 files into a dataset of mel spectrograms split into train-, validation- and test data.
+__SLAPP__ is a data processing pipeline suitable for a wide range of single label audio classification tasks. Currently, it is able to transform a dataset of labeled MP3 files into a dataset of mel spectrograms split into train-, validation- and test data.
 
 -----------------------------------
 
@@ -32,8 +32,8 @@ SLAPP does not just provide you with your processed and ready-to-use dataset. In
 
 SLAPP is made to use on a home pc and requires neither a GPU nor any cloud computation services. If your dataset is large and the processing takes too long, just shut down your computer and resume the data processing another time. SLAPP will reload your progress and make sure none of your precious time is lost. SLAPP was specifically built for researchers, freelancers or hobby programmers who do not have access to advanced processing ressources.
 
-To keep your models clean, SLAPP makes sure that:
-* all slices of an input file are located EITHER in the train-, validation-, or test dataset
+### Suitable Train-Validation-Test Split
+If you draw multiple snippets from an audio file, you have to ensure that all slices of an input file are located EITHER in the train-, validation-, or test dataset. If that is not the case, the validation- and test data are not sufficiently independent, which may distort your classification results. SLAPP makes sure that no snippets from the same audio file land in seperate data splits.
 
 ### Customizable
 All relevant pipeline parameters can be set in ```pipeline_parameters.json```. This includes:
