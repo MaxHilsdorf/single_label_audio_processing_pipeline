@@ -34,7 +34,6 @@ SLAPP is made to use on a home pc and requires neither a GPU nor any cloud compu
 
 To keep your models clean, SLAPP makes sure that:
 * all slices of an input file are located EITHER in the train-, validation-, or test dataset
-* effect-based audio augmentations are only computed for files in the train dataset 
 
 ### Customizable
 All relevant pipeline parameters can be set in ```pipeline_parameters.json```. This includes:
