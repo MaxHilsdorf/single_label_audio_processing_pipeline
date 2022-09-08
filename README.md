@@ -25,7 +25,7 @@ Audio based deep learning is a challenging field of study. One reason for that i
 ### Intuitive Input Format
 SLAPP does not require a dataframe with file paths and labels as an input. Instead, just throw your audio files into a folder corresponding to their label. SLAPP will handle the rest for you.
 
-### Zwischenschritte [ENG]
+### Stores Intermediate Results
 
 SLAPP does not just provide you with your processed and ready-to-use dataset. Instead, your data will be saved along each major processing step (audio slicing, spectrogram computation, data aggregation, data processing). This way, SLAPP makes the entire process transparent and allows you to observe each individual data point at all processing stages.
 
