@@ -32,7 +32,7 @@ SLAPP does not just provide you with your processed and ready-to-use dataset. In
 
 SLAPP is made to use on a home pc and requires neither a GPU nor any cloud computation services. If your dataset is large and the processing takes too long, just shut down your computer and resume the data processing another time. SLAPP will reload your progress and make sure none of your precious time is lost. SLAPP was specifically built for researchers, freelancers or hobby programmers who do not have access to advanced processing ressources.
 
-### Suitable Train-Validation-Test Split
+### Smart Train-Validation-Test Split
 If you draw multiple snippets from an audio file, you have to ensure that all slices of an input file are located EITHER in the train-, validation-, or test dataset. If that is not the case, the validation- and test data are not sufficiently independent, which may distort your classification results. SLAPP makes sure that no snippets from the same audio file land in seperate data splits.
 
 ### Customizable
