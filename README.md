@@ -3,20 +3,19 @@ Author: _Max Hilsdorf_
 
 -----------------------------------
 ## 1. What is SLAPP?
-__SLAPP__ is a data processing pipeline suitable for a wide range of single label audio classification tasks. Currently, it is able to transform a dataset of labeled mp3 files into a dataset of melspectrograms split into train-, validation- and test data.
+__SLAPP__ is a data processing pipeline suitable for a wide range of single label audio classification tasks. Currently, it is able to transform a dataset of labeled mp3 files into a dataset of mel spectrograms split into train-, validation- and test data.
 
 -----------------------------------
 
 ## 2. Why SLAPP?
 
-Audio based deep learning is a challenging field of study. One reason for that is that after aquiring a suitable mp3 dataset, there are still many steps to take until you can start training your first neural network. SLAPP handels all of the following steps for you:
+Audio-based deep learning is a challenging field of study. One reason for that is that after acquiring a suitable mp3 dataset, there are still many steps to take until you can start training your first neural network. SLAPP handles all of the following steps for you:
 1. Cut mp3s down to uniform length
-2. Extract multiple audio slices from each mp3
+2. Extract multiple audio slices from each MP3
 3. Perform a train-validation-test split
-4. Convert mp3 slices to melspectrograms
-5. Aggregate melspectrograms to numpy datasets
+4. Convert mp3 slices to mel spectrograms
+5. Aggregate mel spectrograms to numpy datasets
 6. Normalize and shuffle numpy datasets
-7. Augment the train dataset using a wide range of audio-effects
 
 -----------------------------------
 
