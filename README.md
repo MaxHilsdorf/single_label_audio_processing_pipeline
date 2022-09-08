@@ -3,7 +3,7 @@ Author: _Max Hilsdorf_
 
 -----------------------------------
 ## 1. What is SLAPP?
-__SLAPP__ is a data processing pipeline suitable for a wide range of single label audio classification tasks. Currently, it is able to transform a dataset of labeled mp3 files into a dataset of melspectrograms split into train-, validation- and test data. SLAPP is a __work-in-progress__ project. Although its main components are already functional, I am still working on a clean documentation and a suitable repository structure to make SLAPP as easy to use as possible. The full release is scheduled for __6th of September 2022__. See section 7 for current status updates.
+__SLAPP__ is a data processing pipeline suitable for a wide range of single label audio classification tasks. Currently, it is able to transform a dataset of labeled mp3 files into a dataset of melspectrograms split into train-, validation- and test data.
 
 -----------------------------------
 
