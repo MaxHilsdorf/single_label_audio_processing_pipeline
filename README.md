@@ -33,11 +33,6 @@ SLAPP does not just provide you with your processed and ready-to-use dataset. In
 
 SLAPP is made to use on a home pc and requires neither a GPU nor any cloud computation services. If your dataset is large and the processing takes too long, just shut down your computer and resume the data processing another time. SLAPP will reload your progress and make sure none of your precious time is lost. SLAPP was specifically built for researchers, freelancers or hobby programmers who do not have access to advanced processing ressources.
 
-### Sophisticated Augmentation Features
-SLAPP makes the most out of your data by:
-* extracting multiple audio slices from each track with our without overlap
-* augmenting your audio files by randomly applying carefully selected effect chains
-
 To keep your models clean, SLAPP makes sure that:
 * all slices of an input file are located EITHER in the train-, validation-, or test dataset
 * effect-based audio augmentations are only computed for files in the train dataset 
