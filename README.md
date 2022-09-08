@@ -120,7 +120,7 @@ First, make sure all the requirements are installed (Section 6). Also download (
 ### 7.1. Required Dataset Structure
 Let's start with a formal explanation. For SLAPP to be applicable, you need to have a dataset of size $N$ with $k$ different classes/labels. Every MP3 audio file $x_1, x_2, ..., x_n$ belongs to exactly one of the classes ($c_1, ..., c_k$). This results in a dataset $D$ where every audio file $x_i$ is associated with a class label $c_i$. This means that $D_i = (x_i, c_{x_i})$ for $i \leq N$.
 In a directory of your choice, let's call it "data_dir/", open a folder "data_dir/raw_mp3s/" (other names are also possible but must be configured in ```pipeline_parameters.json```). For every class $(c_1, ..., c_k)$ open a directory "data_dir/raw_mp3s/$c_1$/". Each audio file $x_i$ must be placed in the directory "data_dir/raw_mp3s/$c_{x_i}$/$x_i$". <br> <br>
-In less formal terms, you have lots of MP3 files which belong to a single class. Open a new directory "data_dir/" for your dataset as well as a folder "raw_mp3s/" within this directory. Within the folder "raw_mp3s", open another folder named after each class in your dataset and put all the MP3s which belong to this class in there. <br> <br>
+In less formal terms, imagine you have lots of MP3 files which all belong to exactly one out of at least two classes. Open a new directory "data_dir/" for your dataset as well as a folder "raw_mp3s/" within this directory. Within the folder "raw_mp3s", open another folder named after each class in your dataset and put all the MP3s which belong to this class in there. <br> <br>
 As an easy example, imagine you have 100 speech files, where 50 were recorded by males and 50 were recorded by females. In order to build a classifier for female vs. male speech, open a directory "data_dir/raw_mp3s/male/" and a directory "data_dir/raw_mp3s/female/". Now, throw the 50 male-spoken files in the male folder and the 50 female-spoken files in the female folder.
 
 ### 7.2. Set Pipeline Parameters
@@ -153,7 +153,7 @@ Under "process_dataset_params", set the following parameters to your liking:
 
 ### 7.3. Run SLAPP
 
-Run ```build_dataset.py``` and then ```process_dataset.py``` to build and process your dataset. If the dataset building takes too long, you can terminate the program at any time and restart it to resume your progress. After running both files, the processed mel spectrograms as well as the class clabels will be stored (separately for train-, validation-, and test split) in the "data_folder" you chose in ```pipeline_parameters.json```.
+Run ```build_dataset.py``` and then ```process_dataset.py``` to build and process your dataset. If the dataset building takes too long, you can terminate the program at any time and restart it to resume your progress. After running both files, the processed mel spectrograms, as well as the class labels, will be stored (separately for train-, validation-, and test split) in the "data_folder" you chose in ```pipeline_parameters.json```.
 
 -----------------------------------
 
