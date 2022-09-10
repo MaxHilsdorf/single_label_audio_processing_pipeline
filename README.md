@@ -98,7 +98,7 @@ Converts a dataset of sliced mp3s into a melspectrogram dataset.
 
 * ```Dataset.create_training_dataset```
 
-Aggregates a melspectrogram and performs a base-file-wise train-val-test split. Saves the aggregated and split datasets as numpy arrays.
+Aggregates a melspectrogram and performs a track-wise train-val-test split (meaning no two slices from the same audio file are in different splits). Saves the aggregated and split datasets as numpy arrays.
 
 -----------------------------------
 
