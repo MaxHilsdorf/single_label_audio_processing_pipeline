@@ -64,7 +64,7 @@ You should make use of SLAPPs audio slicing functionality if all or most of the 
 
 ## 5. Modular Components
 
-SLAPP consists of the modules: ```audio_processor.py```, ```data_processor.py```, ```dataset_creator.py```, ```audio_augmenter.py```.
+SLAPP consists of the modules: ```audio_processor.py```, ```data_processor.py```, ```dataset_creator.py```.
 
 ### Audio Processor (audio_processor.py)
 Includes utility functions for all processing steps applied directly to audio files (except for audio augmentation, which has its own module).
