@@ -77,7 +77,7 @@ Cuts an audio file into several slices of the same length using _pydub.AudioSegm
 Converts an audio slice into a melspectrogram using _librosa.features.melspectrogram_.
 
 ### Data Processor (data_processor.py)
-Included a DataProcessor class built around processing seperate numpy arrays for train-, val-, and test data.
+Includes a DataProcessor class built around processing seperate numpy arrays for train-, val-, and test data.
 * ```DataProcessor.normalize_data```
 
 Normalizes the data for better training convergence. Currently implemened: _min_max_ (scaling to interval [0,1]) and _non_zero_min_max_ (scaling interval to [0.001, 1.001])
