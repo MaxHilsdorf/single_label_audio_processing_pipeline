@@ -155,6 +155,8 @@ Under "process_dataset_params", set the following parameters to your liking:
 
 Run ```build_dataset.py``` and then ```process_dataset.py``` to build and process your dataset. If the dataset building takes too long, you can terminate the program at any time and restart it to resume your progress. After running both files, the processed mel spectrograms, as well as the class labels, will be stored (separately for train-, validation-, and test split) in the "data_folder" you chose in ```pipeline_parameters.json```.
 
+### 7.4. Applications of SLAPP
+* ["Music Genre Classification Using a Divide & Conquer CRNN" by Max Hilsdorf](https://towardsdatascience.com/music-genre-classification-using-a-divide-conquer-crnn-2ff1cf49859f)
 -----------------------------------
 
 ## 8. Current Status
