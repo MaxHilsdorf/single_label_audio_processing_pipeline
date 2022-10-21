@@ -111,6 +111,8 @@ As far as python libraries go, only three libraries outside of the Python Standa
 
 Additionally, the audio codec [FFmpeg](https://ffmpeg.org/download.html) must be installed on your system.
 
+Note that currently, SLAPP does not run on MacOS, but will be adapted in the future.
+
 -----------------------------------
 
 ## 7. How to Use SLAPP
